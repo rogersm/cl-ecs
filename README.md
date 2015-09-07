@@ -75,7 +75,7 @@ Below is a very basic usage example:
  (decf (value (component entity 'health))))
 
 ;; define a method for the handle-input system.
-;; note: this will be called for all entities that possess the player-controlled component as in
+;; note: this will be called for all entities that possess the player-controlled AND health components as in
 ;; the defsys definition.
 (defmethod do-system ((system handle-input) entity)
   "Your player input event code goes here")
