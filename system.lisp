@@ -2,7 +2,7 @@
 
 (defclass ecs-system ()
   ((name :reader name)
-   (required :reader required
+   (required :accessor required
              :initform nil)
    (entities :accessor entities
              :initform nil)))
@@ -20,7 +20,8 @@
      (defclass ,name (ecs-system)
        ((name :initform ',name)
         (required :initform ',@required)))
-     (unless (find-system ',name)
+     (if-let ((s (find-system ',name)))
+       (setf (required s) ',@required)
        (appendf (systems *ecs-manager*) (list (make-instance ',name))))))
 
 (defmethod do-system (system entity))

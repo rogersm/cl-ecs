@@ -4,6 +4,7 @@
   (:export #:*ecs-manager*
            #:tick
            #:make-entity
+           #:entity-id
            #:add-component
            #:remove-component
            #:component

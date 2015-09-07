@@ -1,7 +1,7 @@
 (in-package :ecs)
 
 (defclass entity ()
-  ((id :reader id
+  ((id :reader entity-id
        :initform (incf (entity-count *ecs-manager*)))
    (components :accessor components
                :initform nil)))
