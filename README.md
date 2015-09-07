@@ -47,9 +47,9 @@ Below is a very basic usage example:
 
 ;;; define some systems
 ;;; important: the order in which systems are defined, is the order in which they will be
-;;;            iterated through during the game loop.
+;;; iterated through during the game loop.
 
-;; define a system that handle's user input events -- requires the health and player-controlled
+;; define a system that handles user input events -- requires the health and player-controlled
 ;; components.
 (defsys handle-input (health player-controlled))
 
@@ -75,7 +75,7 @@ Below is a very basic usage example:
  (decf (value (component entity 'health))))
 
 ;; define a method for the handle-input system.
-;; note: this will be called for all entities that possess the player-controlled component as in
+;; note: this will be called for all entities that possess the player-controlled AND health components as in
 ;; the defsys definition.
 (defmethod do-system ((system handle-input) entity)
   "Your player input event code goes here")
