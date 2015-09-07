@@ -10,9 +10,19 @@
   (print-unreadable-object (object stream :type t)
     (format stream "(~{~S~^, ~})" (mapcar #'name (components object)))))
 
-(defun make-entity ()
+(defun make-entity (&key components)
   "Create a new entity without any components."
-  (make-instance 'entity))
+  (let ((entity (make-instance 'entity)))
+    (dolist (name components)
+      (add-component entity name))
+    entity))
+
+(defmacro make-batch ((&rest items) (&rest components) &body body)
+  "Macro for creating multiple entities with the same components."
+  `(let (,@(loop for i in items
+                 for e = `(make-entity :components ',components)
+                 collect (list i e)))
+     ,@body))
 
 (defun add-component (entity name &rest args)
   "Add a component by name to an entity and update all systems."
