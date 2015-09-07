@@ -49,7 +49,7 @@ Below is a very basic usage example:
 ;;; important: the order in which systems are defined, is the order in which they will be
 ;;; iterated through during the game loop.
 
-;; define a system that handle's user input events -- requires the health and player-controlled
+;; define a system that handles user input events -- requires the health and player-controlled
 ;; components.
 (defsys handle-input (health player-controlled))
 
