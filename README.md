@@ -47,7 +47,7 @@ Below is a very basic usage example:
 
 ;;; define some systems
 ;;; important: the order in which systems are defined, is the order in which they will be
-;;;            iterated through during the game loop.
+;;; iterated through during the game loop.
 
 ;; define a system that handle's user input events -- requires the health and player-controlled
 ;; components.
