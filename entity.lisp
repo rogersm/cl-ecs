@@ -10,19 +10,17 @@
   (print-unreadable-object (object stream :type t)
     (format stream "(~{~S~^, ~})" (mapcar #'name (components object)))))
 
-(defun make-entity (&key components)
-  "Create a new entity without any components."
-  (let ((entity (make-instance 'entity)))
-    (dolist (name components)
-      (add-component entity name))
-    entity))
+(defun component-names (entity)
+  "Return a list of component names for an entity."
+  (mapcar #'name (components entity)))
 
-(defmacro make-batch ((&rest items) (&rest components) &body body)
-  "Macro for creating multiple entities with the same components."
-  `(let (,@(loop for i in items
-                 for e = `(make-entity :components ',components)
-                 collect (list i e)))
-     ,@body))
+(defun update-system (entity)
+  "Register or de-register an entity with all applicable systems.
+   Called when a component is added or removed from an entity."
+  (dolist (s (systems *ecs-manager*))
+    (if (subsetp (required s) (component-names entity))
+      (pushnew entity (entities s))
+      (deletef (entities s) entity))))
 
 (defun add-component (entity name &rest args)
   "Add a component by name to an entity and update all systems."
@@ -39,14 +37,16 @@
   "Find a component of an entity given its name."
   (find name (components entity) :key #'name))
 
-(defun component-names (entity)
-  "Return a list of component names for an entity."
-  (mapcar #'name (components entity)))
+(defun make-entity (&key components)
+  "Create a new entity without any components."
+  (let ((entity (make-instance 'entity)))
+    (dolist (name components)
+      (add-component entity name))
+    entity))
 
-(defun update-system (entity)
-  "Register or de-register an entity with all applicable systems.
-   Called when a component is added or removed from an entity."
-  (dolist (s (systems *ecs-manager*))
-    (if (subsetp (required s) (component-names entity))
-      (pushnew entity (entities s))
-      (deletef (entities s) entity))))
+(defmacro make-batch ((&rest items) (&rest components) &body body)
+  "Macro for creating multiple entities with the same components."
+  `(let (,@(loop for i in items
+                 for e = `(make-entity :components ',components)
+                 collect (list i e)))
+     ,@body))

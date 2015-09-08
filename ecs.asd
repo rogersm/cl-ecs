@@ -8,6 +8,6 @@
   :serial t
   :components ((:file "package")
                (:file "manager")
-               (:file "entity")
                (:file "component")
+               (:file "entity")
                (:file "system")))
