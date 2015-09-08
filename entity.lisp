@@ -3,6 +3,8 @@
 (defclass entity ()
   ((id :reader entity-id
        :initform (incf (entity-count *ecs-manager*)))
+   (tag :accessor tag
+        :initform nil)
    (components :accessor components
                :initform nil)))
 
@@ -33,18 +35,41 @@
   (deletef (components entity) name :key #'name)
   (update-system entity)
   (unless (components entity)
-    (remhash (entity-id entity) (entities *ecs-manager*))))
+    (unregister-entity (entity-id entity))))
+
+(defun register-entity (entity)
+  "Register an entity with the manager."
+  (setf (gethash (entity-id entity) (entities *ecs-manager*)) entity))
+
+(defun unregister-entity (id)
+  "Unregister an entity with the manager."
+  (remhash id (entities *ecs-manager*)))
+
+(defun tag-entity (id tag)
+  "Tag an entity."
+  (let ((entity (entity-by-id id)))
+    (when (tag entity)
+      (untag-entity id tag))
+    (setf (gethash tag (tags *ecs-manager*)) id)))
+
+(defun untag-entity (id tag)
+  "Untag an entity."
+  (let ((entity (entity-by-id id)))
+    (setf (tag entity) nil)
+    (remhash tag (tags *ecs-manager*))))
 
 (defun component (entity name)
   "Find a component of an entity given its name."
   (find name (components entity) :key #'name))
 
-(defun make-entity (&key components)
+(defun make-entity (&key tag components)
   "Create a new entity without any components."
   (let ((entity (make-instance 'entity)))
-    (setf (gethash (entity-id entity) (entities *ecs-manager*)) entity)
+    (register-entity entity)
     (dolist (name components)
       (add-component entity name))
+    (when tag
+      (tag-entity (entity-id entity) tag))
     entity))
 
 (defmacro make-batch ((&rest items) (&rest components) &body body)
@@ -54,6 +79,10 @@
                  collect (list i e)))
      ,@body))
 
-(defun find-entity (id)
-  "Find an entity given its ID."
+(defun entity-by-id (id)
+  "Find an entity by its ID."
   (gethash id (entities *ecs-manager*)))
+
+(defun entity-by-tag (tag)
+  "Find an entity by its tag."
+  (gethash tag (tags *ecs-manager*)))

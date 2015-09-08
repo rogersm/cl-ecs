@@ -6,7 +6,8 @@
            #:make-entity
            #:make-batch
            #:entity-id
-           #:find-entity
+           #:entity-by-id
+           #:entity-by-tag
            #:add-component
            #:remove-component
            #:component
