@@ -19,8 +19,8 @@
    Called when a component is added or removed from an entity."
   (dolist (s (systems *ecs-manager*))
     (if (subsetp (required s) (component-names entity))
-      (pushnew entity (entities s))
-      (deletef (entities s) entity))))
+      (pushnew (entity-id entity) (entities s))
+      (deletef (entities s) (entity-id entity)))))
 
 (defun add-component (entity name &rest args)
   "Add a component by name to an entity and update all systems."
@@ -31,7 +31,9 @@
 (defun remove-component (entity name)
   "Remove a component by name from an entity and update all systems."
   (deletef (components entity) name :key #'name)
-  (update-system entity))
+  (update-system entity)
+  (unless (components entity)
+    (remhash (entity-id entity) (entities *ecs-manager*))))
 
 (defun component (entity name)
   "Find a component of an entity given its name."
@@ -40,6 +42,7 @@
 (defun make-entity (&key components)
   "Create a new entity without any components."
   (let ((entity (make-instance 'entity)))
+    (setf (gethash (entity-id entity) (entities *ecs-manager*)) entity)
     (dolist (name components)
       (add-component entity name))
     entity))
@@ -50,3 +53,7 @@
                  for e = `(make-entity :components ',components)
                  collect (list i e)))
      ,@body))
+
+(defun find-entity (id)
+  "Find an entity given its ID."
+  (gethash id (entities *ecs-manager*)))

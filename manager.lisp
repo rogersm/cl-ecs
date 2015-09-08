@@ -3,6 +3,8 @@
 (defclass ecs-manager ()
   ((entity-count :accessor entity-count
                  :initform 0)
+   (entities :accessor entities
+             :initform (make-hash-table))
    (systems :accessor systems
             :initform nil)))
 
@@ -11,5 +13,5 @@
 (defun tick ()
   "Used to step through all systems each iteration of the game loop."
   (dolist (s (systems *ecs-manager*))
-    (dolist (e (entities s))
-      (do-system s e))))
+    (dolist (id (entities s))
+      (do-system s (find-entity id)))))

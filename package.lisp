@@ -6,6 +6,7 @@
            #:make-entity
            #:make-batch
            #:entity-id
+           #:find-entity
            #:add-component
            #:remove-component
            #:component
