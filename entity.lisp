@@ -50,7 +50,7 @@
   (let ((entity (entity-by-id id)))
     (when (tag entity)
       (untag-entity id tag))
-    (setf (gethash tag (tags *ecs-manager*)) id)))
+    (setf (gethash tag (tags *ecs-manager*)) entity)))
 
 (defun untag-entity (id tag)
   "Untag an entity."

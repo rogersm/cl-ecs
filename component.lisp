@@ -17,6 +17,15 @@
                             :initarg (make-keyword slot-name)
                             :initform slot-form)))))
 
+(defmacro with-cslots ((&rest slots) (component entity) &body body)
+  `(let (,@(loop with c = `(component ,entity ',component)
+                 for s in slots
+                 when (listp s)
+                 collect (list (second s) (list (first s) c))
+                 unless (listp s)
+                 collect (list s (list s c))))
+     ,@body))
+
 (defun make-component (name data)
   "Make a new component with the given name and data."
   (when (find-class name nil)

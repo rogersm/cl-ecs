@@ -12,6 +12,7 @@
            #:remove-component
            #:component
            #:defcomponent
+           #:with-cslots
            #:defsys
            #:do-system))
 
