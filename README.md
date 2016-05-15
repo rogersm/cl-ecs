@@ -42,6 +42,8 @@ Below is a very basic usage example:
 ;; initialize the ECS system.
 (init-ecs)
 
+;;; define some components.
+
 ;; define a component representing 3D coordinates.
 (defcomponent coords
   (x y z))
@@ -63,11 +65,17 @@ Below is a very basic usage example:
   (incf (y e) (vy e))
   (incf (z e) (vz e)))
 
+;;; define some entities.
+
 ;; define a new entity with the 'coords' and 'velocity' components.
 (make-entity nil '(coords velocity) :x 10 :y 20 :z 30 :vx 1 :vy 2 :vz 3)
+;; => 1
 
 ;; define a new entity using the previous as a template.
 (make-entity 1 '(coords velocity) :x 30 :y 20 :z 10)
+;; => 2
+
+;;; execute the systems.
 
 ;; execute the 'position' system which prints out the current coordinates.
 (do-system 'position)
@@ -76,6 +84,7 @@ Below is a very basic usage example:
 
 ;; execute the 'move' system.
 (do-system 'move)
+;; => NIL
 
 ;; execute the 'position' system again, to see how the 'move' system affected
 ;; the entities.
