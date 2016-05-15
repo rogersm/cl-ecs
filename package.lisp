@@ -5,8 +5,10 @@
            #:defcomponent
            #:add-component
            #:remove-component
-           #:make-entity
+           #:entity
+           #:add-entity
            #:remove-entity
+           #:with-attrs
            #:defsys
            #:do-system
            #:cycle-system))

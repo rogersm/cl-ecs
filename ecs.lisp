@@ -23,9 +23,10 @@ Also defines accessor methods for each field to be used on an entity."
      (setf (component-fields ',name) ',fields)
      ,@(loop :for field :in fields
              :for f = (make-keyword field)
-             :collect `(defun ,field (id)
+             :for s = (intern (format nil "E.~A" field))
+             :collect `(defun ,s (id)
                          (entity-attr id ,f))
-             :collect `(defun (setf ,field) (value id)
+             :collect `(defun (setf ,s) (value id)
                          (setf (entity-attr id ,f) value)))
      ',name))
 
@@ -85,11 +86,18 @@ Also defines accessor methods for each field to be used on an entity."
   "Set the value of one of an entity's attributes."
   (setf (getf (gethash id (ecs-attrs *ecs*)) field) value))
 
+(defmacro with-attrs (attrs &body body)
+  "A helper macro to access an entity's attributes within a system definition."
+  `(symbol-macrolet (,@(loop :for attr :in attrs
+                             :for s = (intern (format nil "E.~A" attr))
+                             :collect (list attr `(,s entity))))
+     ,@body))
+
 (defun remove-entity-attr (id field)
   "Remove one of an entity's attributes."
   (delete-from-plistf (gethash id (ecs-attrs *ecs*)) field))
 
-(defun make-entity (prototype components &rest initargs)
+(defun add-entity (prototype components &rest initargs)
   "Create a new entity."
   (let ((id (new-id)))
     (when prototype
@@ -110,7 +118,7 @@ Also defines accessor methods for each field to be used on an entity."
   "Define a new system with the specified required components."
   `(progn
      (setf (required-components ',name) ',required)
-     (defmethod do-entity ((system (eql ',name)) e)
+     (defmethod do-entity ((system (eql ',name)) entity)
        ,@body)))
 
 (defun all-systems ()

@@ -55,15 +55,23 @@ Below is a very basic usage example:
 ;;; define some systems
 
 ;; define a system that will print an entity's current coordinates.
+;; within the body, you can refer to the entity with the symbol "ENTITY", and
+;; individual entity attributes with the prefix "E." as shown below.
 (defsys position (coords)
   (format t "Entity ~A is at coordinates (~A, ~A, ~A)~%"
-          e (x e) (y e) (z e)))
+          entity
+          (e.x entity)
+          (e.y entity)
+          (e.z entity)))
 
 ;; define a system that will move an entity.
+;; you can also use the WITH-ATTRS macro to save some typing, or if you do not
+;; like the "E.ATTR" accessors as used in the above system definition.
 (defsys move (coords velocity)
-  (incf (x e) (vx e))
-  (incf (y e) (vy e))
-  (incf (z e) (vz e)))
+  (with-attrs (x y z vx vy vz)
+    (incf x vx)
+    (incf y vy)
+    (incf z vz)))
 
 ;;; define some entities.
 
