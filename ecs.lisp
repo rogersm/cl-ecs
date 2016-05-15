@@ -1,4 +1,4 @@
-(in-package :ecs)
+(in-package :cl-ecs)
 
 (defstruct ecs
   (fields (make-hash-table))

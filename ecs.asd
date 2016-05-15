@@ -1,5 +1,5 @@
-(defsystem #:ecs
-  :name "Entity Component System"
+(defsystem #:cl-ecs
+  :name "CL-ECS"
   :author "Michael Fiano <michael.fiano@gmail.com>"
   :version "0.1"
   :license "MIT"

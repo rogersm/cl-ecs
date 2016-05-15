@@ -1,4 +1,4 @@
-(defpackage #:ecs
+(defpackage #:cl-ecs
   (:use #:cl
         #:alexandria)
   (:export #:init-ecs
@@ -13,4 +13,4 @@
            #:do-system
            #:cycle-system))
 
-(in-package :ecs)
+(in-package :cl-ecs)
