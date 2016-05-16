@@ -7,4 +7,7 @@
   :depends-on (#:alexandria)
   :serial t
   :components ((:file "package")
-               (:file "ecs")))
+               (:file "ecs")
+               (:file "entity")
+               (:file "component")
+               (:file "system")))

@@ -39,73 +39,67 @@ Below is a very basic usage example:
 ```lisp
 (in-package :ecs)
 
-;; initialize the ECS system.
+;; Initialize the ECS system.
 (init-ecs)
 
-;;; define some components.
+;;; Define some components.
 
-;; define a component representing 3D coordinates.
+;; Define a component representing 3D coordinates.
 (defcomponent coords
   (x y z))
 
-;; define a component representing velocity.
+;; Define a component representing velocity.
 (defcomponent velocity
   (x y z))
 
-;;; define some systems
+;;; Define some systems.
 
-;; define a system that will print an entity's current coordinates.
-;; within the body, you can refer to the entity with the symbol ENTITY, and
+;; Define a system that will print an entity's current coordinates.
+;; Within the body, you can refer to the entity with the symbol 'ENTITY', and
 ;; individual entity attributes prefixed with the component name, as shown
 ;; below.
 (defsys position (coords)
   (format t "Entity ~A is at coordinates (~A, ~A, ~A)~%"
-          entity
-          coords-x
-          coords-y
-          coords-z))
+          entity coords-x coords-y coords-z))
 
-;; define a system that will move an entity.
+;; Define a system that will move an entity.
 (defsys move (coords velocity)
   (incf coords-x velocity-x)
   (incf coords-y velocity-y)
   (incf coords-z velocity-z))
 
-;;; define some entities.
+;;; Define some entities.
 
-;; define a new entity with the 'coords' and 'velocity' components.
-(make-entity nil
-             '(coords velocity)
-             :coords-x 10
-             :coords-y 20
-             :coords-z 30
-             :velocity-x 1
-             :velocity-y 2
-             :velocity-z 3)
+;; Define a new entity with the 'COORDS' and 'VELOCITY' components.
+(add-entity nil
+  (coords :x 10 :y 20 :z 30)
+  (velocity :x 1 :y 2 :z 3))
 ;; => 1
 
-;; define a new entity using the previous as a template.
-(make-entity 1
-             '(coords velocity)
-             :coords-x 30
-             :coords-y 20
-             :coords-z 10)
+;; Define a new entity using the previous as a template.
+(add-entity 1
+  (coords :x 30 :y 20 :z 10))
 ;; => 2
 
-;;; execute the systems.
+;;; Execute the systems.
 
-;; execute the 'position' system which prints out the current coordinates.
+;; Execute the 'POSITION' system which prints out the current coordinates.
 (do-system 'position)
 ;; => Entity 2 is at coordinates (30, 20, 10)
 ;; => Entity 1 is at coordinates (10, 20, 30)
 
-;; execute the 'move' system.
+;; Execute the 'MOVE' system.
 (do-system 'move)
 ;; => NIL
 
-;; execute the 'position' system again, to see how the 'move' system affected
+;; Execute the 'position' system again, to see how the 'MOVE' system affected
 ;; the entities.
 (do-system 'position)
 ;; => Entity 2 is at coordinates (31, 22, 13)
 ;; => Entity 1 is at coordinates (11, 22, 33)
+
+;; You can also run each system once automatically with CYCLE-SYSTEMS.
+(cycle-systems)
+;; => Entity 2 is at position (32, 24, 16)
+;; => Entity 1 is at position (12, 24, 36)
 ```

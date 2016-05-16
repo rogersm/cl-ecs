@@ -8,7 +8,6 @@
            #:entity
            #:add-entity
            #:remove-entity
-           #:with-attrs
            #:defsys
            #:do-system
            #:cycle-system))
