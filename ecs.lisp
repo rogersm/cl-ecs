@@ -1,10 +1,11 @@
 (in-package :cl-ecs)
 
 (defstruct ecs
-  (fields (make-hash-table))
-  (components (make-hash-table))
-  (attrs (make-hash-table))
-  (systems (make-hash-table)))
+  (component-fields (make-hash-table))
+  (entity-components (make-hash-table))
+  (entity-attrs (make-hash-table))
+  (system-components (make-hash-table))
+  (system-entities (make-hash-table)))
 
 (defvar *ecs* nil)
 
@@ -32,20 +33,21 @@ Also defines accessor methods for each field to be used on an entity."
 
 (defun all-components ()
   "Get a list of all defined components."
-  (hash-table-keys (ecs-fields *ecs*)))
+  (hash-table-keys (ecs-component-fields *ecs*)))
 
 (defun component-fields (component)
   "Get a list of fields for the specified component."
-  (gethash component (ecs-fields *ecs*)))
+  (gethash component (ecs-component-fields *ecs*)))
 
 (defun (setf component-fields) (value component)
   "Assign a list of fields to the specified component."
-  (setf (gethash component (ecs-fields *ecs*)) value))
+  (setf (gethash component (ecs-component-fields *ecs*)) value))
 
 (defun add-component (id component attrs)
   "Add a new component to the specified entity."
   (when (member component (all-components))
     (pushnew component (entity-components id)))
+  (update-systems)
   (loop :for (field . value) :in (reverse (plist-alist attrs))
         :for fields = (mapcar #'make-keyword (component-fields component))
         :when (member field fields)
@@ -54,37 +56,38 @@ Also defines accessor methods for each field to be used on an entity."
 (defun remove-component (id component)
   "Remove a component from the specified entity."
   (deletef (entity-components id) component)
+  (update-systems)
   (loop :for field :in (component-fields component)
         :when (entity-attr id field)
           :do (remove-entity-attr id field)))
 
 (defun all-entities ()
   "Get a list of all defined entities."
-  (hash-table-keys (ecs-attrs *ecs*)))
+  (hash-table-keys (ecs-entity-attrs *ecs*)))
 
 (defun entity-components (id)
   "Get a list of components that the specified entity has."
-  (gethash id (ecs-components *ecs*)))
+  (gethash id (ecs-entity-components *ecs*)))
 
 (defun (setf entity-components) (components id)
   "Assign a list of components to the specified entity."
-  (setf (gethash id (ecs-components *ecs*)) components))
+  (setf (gethash id (ecs-entity-components *ecs*)) components))
 
 (defun entity-attrs (id)
   "Get a list of the specified entity's attributes."
-  (gethash id (ecs-attrs *ecs*)))
+  (gethash id (ecs-entity-attrs *ecs*)))
 
 (defun (setf entity-attrs) (value id)
   "Assign a list of attributes to the specified entity."
-  (setf (gethash id (ecs-attrs *ecs*)) value))
+  (setf (gethash id (ecs-entity-attrs *ecs*)) value))
 
 (defun entity-attr (id field)
   "Get the value of one of an entity's attributes."
-  (getf (gethash id (ecs-attrs *ecs*)) field))
+  (getf (gethash id (ecs-entity-attrs *ecs*)) field))
 
 (defun (setf entity-attr) (value id field)
   "Set the value of one of an entity's attributes."
-  (setf (getf (gethash id (ecs-attrs *ecs*)) field) value))
+  (setf (getf (gethash id (ecs-entity-attrs *ecs*)) field) value))
 
 (defmacro with-attrs (attrs &body body)
   "A helper macro to access an entity's attributes within a system definition."
@@ -95,7 +98,7 @@ Also defines accessor methods for each field to be used on an entity."
 
 (defun remove-entity-attr (id field)
   "Remove one of an entity's attributes."
-  (delete-from-plistf (gethash id (ecs-attrs *ecs*)) field))
+  (delete-from-plistf (gethash id (ecs-entity-attrs *ecs*)) field))
 
 (defun add-entity (prototype components &rest initargs)
   "Create a new entity."
@@ -109,10 +112,11 @@ Also defines accessor methods for each field to be used on an entity."
 
 (defun remove-entity (id)
   "Remove an entity."
-  (remhash id (ecs-components *ecs*))
-  (remhash id (ecs-attrs *ecs*)))
+  (remhash id (ecs-entity-components *ecs*))
+  (remhash id (ecs-entity-attrs *ecs*))
+  (update-systems))
 
-(defgeneric do-entity (system entity))
+(defgeneric do-entity (system entity all))
 
 (defmacro defsys (name (&rest required) &body body)
   "Define a new system with the specified required components."
@@ -123,24 +127,45 @@ Also defines accessor methods for each field to be used on an entity."
 
 (defun all-systems ()
   "Get a list of all defined systems."
-  (hash-table-keys (ecs-systems *ecs*)))
+  (hash-table-keys (ecs-system-components *ecs*)))
 
 (defun required-components (system)
   "Get a list of the specified system's required components."
-  (gethash system (ecs-systems *ecs*)))
+  (gethash system (ecs-system-components *ecs*)))
 
 (defun (setf required-components) (value system)
   "Assign a list of required components to the specified system."
-  (setf (gethash system (ecs-systems *ecs*)) value))
+  (setf (gethash system (ecs-system-components *ecs*)) value))
+
+(defun collect-system-entities (system)
+  "Create a list of all of a system's entities."
+  (loop :with r = (required-components system)
+        :for (id . c) :in (hash-table-alist (ecs-entity-components *ecs*))
+        :when (and (intersection r c)
+                   (not (set-difference r c)))
+          :collect id))
+
+(defun system-entities (system)
+  "Get a list of all of a system's entities."
+  (gethash system (ecs-system-entities *ecs*)))
+
+(defun (setf system-entities) (value system)
+  "Assign a list of entities to the specified system."
+  (setf (gethash system (ecs-system-entities *ecs*)) value))
+
+(defun update-systems ()
+  "Update the the list of entities each system processes.
+Called when a component is added or removed, as well as when an entity is
+removed."
+  (loop :for system :in (all-systems)
+        :do (setf (system-entities system) (collect-system-entities system))))
 
 (defmethod do-system (system)
   "Execute the specified system for each entity that has all of its required
 components."
-  (loop :with r = (required-components system)
-        :for (id . c) :in (hash-table-alist (ecs-components *ecs*))
-        :when (and (intersection r c)
-                   (not (set-difference r c)))
-          :do (do-entity system id)))
+  (loop :with entities = (system-entities system)
+        :for id :in entities
+        :do (do-entity system id entities)))
 
 (defun cycle-systems ()
   "Cycle through all defined systems."
