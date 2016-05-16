@@ -50,37 +50,49 @@ Below is a very basic usage example:
 
 ;; define a component representing velocity.
 (defcomponent velocity
-  (vx vy vz))
+  (x y z))
 
 ;;; define some systems
 
 ;; define a system that will print an entity's current coordinates.
 ;; within the body, you can refer to the entity with the symbol "ENTITY", and
-;; individual entity attributes with the prefix "E." as shown below.
+;; individual entity attributes with prefixed with the component name, as shown
+;; below.
 (defsys position (coords)
   (format t "Entity ~A is at coordinates (~A, ~A, ~A)~%"
           entity
-          (e.x entity)
-          (e.y entity)
-          (e.z entity)))
+          (coords-x entity)
+          (coords-y entity)
+          (coords-z entity)))
 
 ;; define a system that will move an entity.
 ;; you can also use the WITH-ATTRS macro to save some typing, or if you do not
-;; like the "E.ATTR" accessors as used in the above system definition.
+;; like the accessors as used in the above system definition.
 (defsys move (coords velocity)
-  (with-attrs (x y z vx vy vz)
-    (incf x vx)
-    (incf y vy)
-    (incf z vz)))
+  (with-attrs (coords velocity)
+    (incf coords-x velocity-x)
+    (incf coords-y velocity-y)
+    (incf coords-z velocity-z)))
 
 ;;; define some entities.
 
 ;; define a new entity with the 'coords' and 'velocity' components.
-(make-entity nil '(coords velocity) :x 10 :y 20 :z 30 :vx 1 :vy 2 :vz 3)
+(make-entity nil
+             '(coords velocity)
+             :coords-x 10
+             :coords-y 20
+             :coords-z 30
+             :velocity-x 1
+             :velocity-y 2
+             :velocity-z 3)
 ;; => 1
 
 ;; define a new entity using the previous as a template.
-(make-entity 1 '(coords velocity) :x 30 :y 20 :z 10)
+(make-entity 1
+             '(coords velocity)
+             :coords-x 30
+             :coords-y 20
+             :coords-z 10)
 ;; => 2
 
 ;;; execute the systems.

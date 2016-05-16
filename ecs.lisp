@@ -19,16 +19,16 @@
 
 (defmacro defcomponent (name &body (fields))
   "Define a new component with the specified fields.
-Also defines accessor methods for each field to be used on an entity."
+Also defines accessors for each field to be used on an entity."
   `(progn
-     (setf (component-fields ',name) ',fields)
-     ,@(loop :for field :in fields
-             :for f = (make-keyword field)
-             :for s = (intern (format nil "E.~A" field))
-             :collect `(defun ,s (id)
-                         (entity-attr id ,f))
-             :collect `(defun (setf ,s) (value id)
-                         (setf (entity-attr id ,f) value)))
+     ,@(loop :for f :in fields
+             :for field = (intern (format nil "~A-~A" name f))
+             :for key = (make-keyword field)
+             :do (add-component-field name field)
+             :collect `(defun ,field (id)
+                         (entity-attr id ,key))
+             :collect `(defun (setf ,field) (value id)
+                         (setf (entity-attr id ,key) value)))
      ',name))
 
 (defun all-components ()
@@ -42,6 +42,10 @@ Also defines accessor methods for each field to be used on an entity."
 (defun (setf component-fields) (value component)
   "Assign a list of fields to the specified component."
   (setf (gethash component (ecs-component-fields *ecs*)) value))
+
+(defun add-component-field (component field)
+  "Add a new field to the specified component."
+  (pushnew field (component-fields component)))
 
 (defun add-component (id component attrs)
   "Add a new component to the specified entity."
@@ -89,11 +93,12 @@ Also defines accessor methods for each field to be used on an entity."
   "Set the value of one of an entity's attributes."
   (setf (getf (gethash id (ecs-entity-attrs *ecs*)) field) value))
 
-(defmacro with-attrs (attrs &body body)
+(defmacro with-attrs (components &body body)
   "A helper macro to access an entity's attributes within a system definition."
-  `(symbol-macrolet (,@(loop :for attr :in attrs
-                             :for s = (intern (format nil "E.~A" attr))
-                             :collect (list attr `(,s entity))))
+  `(symbol-macrolet
+       (,@(loop :for c :in components
+                :append (loop :for f :in (component-fields c)
+                              :collect (list f `(,f entity)))))
      ,@body))
 
 (defun remove-entity-attr (id field)
@@ -116,7 +121,7 @@ Also defines accessor methods for each field to be used on an entity."
   (remhash id (ecs-entity-attrs *ecs*))
   (update-systems))
 
-(defgeneric do-entity (system entity all))
+(defgeneric do-entity (system entity))
 
 (defmacro defsys (name (&rest required) &body body)
   "Define a new system with the specified required components."
@@ -165,7 +170,7 @@ removed."
 components."
   (loop :with entities = (system-entities system)
         :for id :in entities
-        :do (do-entity system id entities)))
+        :do (do-entity system id)))
 
 (defun cycle-systems ()
   "Cycle through all defined systems."
