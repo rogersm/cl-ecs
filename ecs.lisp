@@ -128,7 +128,8 @@ Also defines accessors for each field to be used on an entity."
   `(progn
      (setf (required-components ',name) ',required)
      (defmethod do-entity ((system (eql ',name)) entity)
-       ,@body)))
+       (with-attrs ,required
+         ,@body))))
 
 (defun all-systems ()
   "Get a list of all defined systems."
