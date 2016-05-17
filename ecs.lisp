@@ -4,7 +4,7 @@
   (component-fields (make-hash-table))
   (entity-components (make-hash-table))
   (entity-attrs (make-hash-table))
-  (system-components (make-hash-table))
+  (system-meta (make-hash-table))
   (system-entities (make-hash-table)))
 
 (defvar *ecs* nil)

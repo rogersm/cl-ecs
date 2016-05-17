@@ -15,7 +15,7 @@
                       :collect form :into values
                     :finally (return
                                (list
-                                `(intern (symbol-name ',(car component)))
+                                (car component)
                                 (mapcar
                                  (lambda (x)
                                    (make-keyword
@@ -25,26 +25,18 @@
             components))
          (bindings
            (loop :for (nil nil binds) :in parts
-                 :append (loop :for b :in binds :collect b) :into bindings
-                 :finally (return (nreverse bindings)))))
+                 :append (loop :for b :in binds :collect b))))
     `(let (,@bindings)
        (%add-entity
         ',prototype
         (list
          ,@(mapcan (lambda (part)
-                     (list (first part)
-                           `(list ,@(mapcan (lambda (sym bind)
-                                              `(,sym ,(first bind)))
-                                            (second part) (third part)))))
+                     (list
+                      `(list ',(first part)
+                             ,@(mapcan (lambda (sym bind)
+                                         `(,sym ,(first bind)))
+                                       (second part) (third part)))))
                    parts))))))
-
-(defmacro with-attrs (components &body body)
-  "A helper macro to access an entity's attributes within a system definition."
-  `(symbol-macrolet
-       (,@(loop :for c :in components
-                :append (loop :for f :in (component-fields c)
-                              :collect (list f `(,f entity)))))
-     ,@body))
 
 (defun all-entities ()
   "Get a list of all defined entities."
@@ -84,7 +76,7 @@
     (when prototype
       (setf (entity-components id) (copy-seq (entity-components prototype))
             (entity-attrs id) (copy-seq (entity-attrs prototype))))
-    (loop :for (name . attrs) :in (plist-alist components)
+    (loop :for (name . attrs) :in components
           :do (add-component id name attrs))
     id))
 

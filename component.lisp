@@ -35,7 +35,7 @@ Also defines accessors for each field to be used on an entity."
   (when (member component (all-components))
     (pushnew component (entity-components id)))
   (update-systems)
-  (loop :for (field . value) :in (reverse (plist-alist attrs))
+  (loop :for (field . value) :in (plist-alist attrs)
         :for fields = (mapcar #'make-keyword (component-fields component))
         :when (member field fields)
           :do (setf (entity-attr id field) value)))
