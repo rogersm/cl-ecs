@@ -5,15 +5,15 @@
   grouping
   entities)
 
-(defmacro defsys (name (required group) &body body)
+(defmacro defsys (name (required grouping) &body body)
   "Define a new system."
   (let ((entities (gensym)))
     `(progn
        (setf (gethash ',name (ecs-systems *ecs*))
              (make-system :required ',required
-                          :grouping ',group))
+                          :grouping ',grouping))
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
-         (destructuring-bind ,group ,entities
+         (destructuring-bind ,grouping ,entities
            ,@body)))))
 
 (defgeneric %do-entities (system &rest entities))
@@ -30,7 +30,7 @@
   "Assign a list of required components to the specified system."
   (setf (required (gethash system (ecs-systems *ecs*))) value))
 
-(defun system-group (system)
+(defun system-grouping (system)
   "Get the list of grouping information for the specified system."
   (grouping (gethash system (ecs-systems *ecs*))))
 
@@ -61,14 +61,16 @@ removed."
 (defmethod do-system (system)
   "Execute the specified system. The system definition's grouping determines
 parallel processing of entities."
-  (let ((group (length (system-group system)))
+  (let ((grouping (length (system-grouping system)))
         (entities (system-entities system)))
-    (when (>= (length entities) group)
-      (if (= group 1)
+    (when (>= (length entities) grouping)
+      (if (= grouping 1)
           (dolist (e entities)
             (%do-entities system e))
           (map-combinations
-           (lambda (x) (apply #'%do-entities system x)) entities :length group)))))
+           (lambda (x) (apply #'%do-entities system x))
+           entities
+           :length grouping)))))
 
 (defun cycle-systems ()
   "Cycle through all defined systems."

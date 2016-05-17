@@ -4,43 +4,32 @@
   components
   attributes)
 
+(defun reformat-components (components)
+  "A helper function to reformat component data given to ADD-ENTITY."
+  (mapcar
+   (lambda (component)
+     (loop :with name = (car component)
+           :for (k . v) :in (plist-alist (cdr component))
+           :collect (make-keyword (format nil "~A-~A" name k)) :into slots
+           :collect (gensym (symbol-name k)) :into vars
+           :collect v :into values
+           :finally (return (list name slots (mapcar #'list vars values)))))
+   components))
+
 (defmacro add-entity (prototype &body components)
   "A helper macro to create an entity."
-  (let* ((parts
-           (mapcar
-            (lambda (component)
-              (loop :for form :in (cdr component)
-                    :for i :from 0
-                    :when (evenp i)
-                      :collect form :into slots
-                      :and
-                        :collect (gensym (symbol-name form)) :into vars
-                    :when (oddp i)
-                      :collect form :into values
-                    :finally (return
-                               (list
-                                (car component)
-                                (mapcar
-                                 (lambda (x)
-                                   (make-keyword
-                                    (format nil "~A-~A" (car component) x)))
-                                 slots)
-                                (mapcar #'list vars values)))))
-            components))
-         (bindings
-           (loop :for (nil nil binds) :in parts
-                 :append (loop :for b :in binds :collect b))))
-    `(let (,@bindings)
+  (let ((parts (reformat-components components)))
+    `(let (,@(mapcan #'third parts))
        (%add-entity
         ',prototype
-        (list
-         ,@(mapcan (lambda (part)
-                     (list
-                      `(list ',(first part)
-                             ,@(mapcan (lambda (sym bind)
-                                         `(,sym ,(first bind)))
-                                       (second part) (third part)))))
-                   parts))))))
+        (list ,@(mapcan
+                 (lambda (part)
+                   (list `(list ',(first part)
+                                ,@(mapcan
+                                   (lambda (sym bind)
+                                     `(,sym ,(first bind)))
+                                   (second part) (third part)))))
+                 parts))))))
 
 (defun all-entities ()
   "Get a list of all defined entities."
