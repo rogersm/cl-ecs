@@ -1,5 +1,9 @@
 (in-package :cl-ecs)
 
+(defstruct (entity (:conc-name nil))
+  components
+  attributes)
+
 (defmacro add-entity (prototype &body components)
   "A helper macro to create an entity."
   (let* ((parts
@@ -40,39 +44,40 @@
 
 (defun all-entities ()
   "Get a list of all defined entities."
-  (hash-table-keys (ecs-entity-attrs *ecs*)))
+  (hash-table-keys (ecs-entities *ecs*)))
 
 (defun entity-components (id)
   "Get a list of all components of the specified entity."
-  (gethash id (ecs-entity-components *ecs*)))
+  (components (gethash id (ecs-entities *ecs*))))
 
-(defun (setf entity-components) (components id)
+(defun (setf entity-components) (value id)
   "Assign a list of components to the specified entity."
-  (setf (gethash id (ecs-entity-components *ecs*)) components))
+  (setf (components (gethash id (ecs-entities *ecs*))) value))
 
 (defun entity-attrs (id)
   "Get a list of the specified entity's attributes."
-  (gethash id (ecs-entity-attrs *ecs*)))
+  (attributes (gethash id (ecs-entities *ecs*))))
 
 (defun (setf entity-attrs) (value id)
   "Assign a list of attributes to the specified entity."
-  (setf (gethash id (ecs-entity-attrs *ecs*)) value))
+  (setf (attributes (gethash id (ecs-entities *ecs*))) value))
 
 (defun entity-attr (id field)
   "Get the value of one of an entity's attributes."
-  (getf (gethash id (ecs-entity-attrs *ecs*)) field))
+  (getf (entity-attrs id) field))
 
 (defun (setf entity-attr) (value id field)
   "Set the value of one of an entity's attributes."
-  (setf (getf (gethash id (ecs-entity-attrs *ecs*)) field) value))
+  (setf (getf (entity-attrs id) field) value))
 
 (defun remove-entity-attr (id field)
   "Remove one of an entity's attributes."
-  (delete-from-plistf (gethash id (ecs-entity-attrs *ecs*)) field))
+  (delete-from-plistf (entity-attrs id) field))
 
 (defun %add-entity (prototype components)
   "Internal function for creating a new entity."
   (let ((id (new-id)))
+    (setf (gethash id (ecs-entities *ecs*)) (make-entity))
     (when prototype
       (setf (entity-components id) (copy-seq (entity-components prototype))
             (entity-attrs id) (copy-seq (entity-attrs prototype))))
@@ -82,6 +87,5 @@
 
 (defun remove-entity (id)
   "Remove an entity."
-  (remhash id (ecs-entity-components *ecs*))
-  (remhash id (ecs-entity-attrs *ecs*))
+  (remhash id (ecs-entities *ecs*))
   (update-systems))

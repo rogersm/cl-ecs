@@ -1,9 +1,14 @@
 (in-package :cl-ecs)
 
+(defstruct (component (:conc-name nil))
+  fields)
+
 (defmacro defcomponent (name &body (fields))
   "Define a new component with the specified fields.
 Also defines accessors for each field to be used on an entity."
   `(progn
+     ,(setf (gethash name (ecs-components *ecs*))
+           (make-component))
      ,@(loop :for f :in fields
              :for field = (intern (format nil "~A-~A" name f))
              :for key = (make-keyword field)
@@ -16,15 +21,15 @@ Also defines accessors for each field to be used on an entity."
 
 (defun all-components ()
   "Get a list of all defined components."
-  (hash-table-keys (ecs-component-fields *ecs*)))
+  (hash-table-keys (ecs-components *ecs*)))
 
 (defun component-fields (component)
   "Get a list of fields for the specified component."
-  (gethash component (ecs-component-fields *ecs*)))
+  (fields (gethash component (ecs-components *ecs*))))
 
 (defun (setf component-fields) (value component)
   "Assign a list of fields to the specified component."
-  (setf (gethash component (ecs-component-fields *ecs*)) value))
+  (setf (fields (gethash component (ecs-components *ecs*))) value))
 
 (defun add-component-field (component field)
   "Add a new field to the specified component."

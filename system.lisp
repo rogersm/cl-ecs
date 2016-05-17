@@ -1,11 +1,17 @@
 (in-package :cl-ecs)
 
+(defstruct (system (:conc-name nil))
+  required
+  grouping
+  entities)
+
 (defmacro defsys (name (required group) &body body)
   "Define a new system."
   (let ((entities (gensym)))
     `(progn
-       (setf (required-components ',name) ',required
-             (system-group ',name) ',group)
+       (setf (gethash ',name (ecs-systems *ecs*))
+             (make-system :required ',required
+                          :grouping ',group))
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
          (destructuring-bind ,group ,entities
            ,@body)))))
@@ -14,39 +20,36 @@
 
 (defun all-systems ()
   "Get a list of all defined systems."
-  (hash-table-keys (ecs-system-meta *ecs*)))
+  (hash-table-keys (ecs-systems *ecs*)))
 
 (defun required-components (system)
   "Get a list of the specified system's required components."
-  (getf (gethash system (ecs-system-meta *ecs*)) :required))
+  (required (gethash system (ecs-systems *ecs*))))
 
 (defun (setf required-components) (value system)
   "Assign a list of required components to the specified system."
-  (setf (getf (gethash system (ecs-system-meta *ecs*)) :required) value))
+  (setf (required (gethash system (ecs-systems *ecs*))) value))
 
 (defun system-group (system)
   "Get the list of grouping information for the specified system."
-  (getf (gethash system (ecs-system-meta *ecs*)) :group))
-
-(defun (setf system-group) (value system)
-  "Assign the list of grouping information to the specified system."
-  (setf (getf (gethash system (ecs-system-meta *ecs*)) :group) value))
+  (grouping (gethash system (ecs-systems *ecs*))))
 
 (defun collect-system-entities (system)
   "Create a list of all of a system's entities."
   (loop :with r = (required-components system)
-        :for (id . c) :in (hash-table-alist (ecs-entity-components *ecs*))
+        :for (id . e) :in (hash-table-alist (ecs-entities *ecs*))
+        :for c = (components e)
         :when (and (intersection r c)
                    (not (set-difference r c)))
           :collect id))
 
 (defun system-entities (system)
   "Get a list of all of a system's entities."
-  (gethash system (ecs-system-entities *ecs*)))
+  (entities (gethash system (ecs-systems *ecs*))))
 
 (defun (setf system-entities) (value system)
   "Assign a list of entities to the specified system."
-  (setf (gethash system (ecs-system-entities *ecs*)) value))
+  (setf (entities (gethash system (ecs-systems *ecs*))) value))
 
 (defun update-systems ()
   "Update the the list of entities each system processes.
