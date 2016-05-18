@@ -39,9 +39,7 @@
   "Create a list of all of a system's entities."
   (loop :with r = (required-components system)
         :for (id . e) :in (hash-table-alist (ecs-entities *ecs*))
-        :for c = (components e)
-        :when (and (intersection r c)
-                   (not (set-difference r c)))
+        :when (all r (components e))
           :collect id))
 
 (defun system-entities (system)

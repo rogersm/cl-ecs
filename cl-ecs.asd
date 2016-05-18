@@ -8,6 +8,7 @@
                #:graph)
   :serial t
   :components ((:file "package")
+               (:file "util")
                (:file "ecs")
                (:file "entity")
                (:file "component")

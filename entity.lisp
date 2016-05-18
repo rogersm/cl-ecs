@@ -54,14 +54,11 @@
 
 (defun all-tags-p (id &rest tags)
   "Check if an entity has all of the specified tags."
-  (let ((present (entity-tags id)))
-    (and (intersection tags present)
-         (not (set-difference tags present)))))
+  (all tags (entity-tags id)))
 
 (defun some-tags-p (id &rest tags)
   "Check if an entity has some of the specified tags."
-  (let ((present (entity-tags id)))
-    (when (intersection tags present) t)))
+  (any tags (entity-tags id)))
 
 (defun add-tags (id &rest tags)
   "Add some tags to the specified entity."
