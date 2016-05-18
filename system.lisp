@@ -61,15 +61,14 @@
   "Execute the specified system. The system definition's grouping determines
 parallel processing of entities."
   (let ((grouping (length (system-grouping system)))
-        (entities (system-entities system)))
+        (entities (system-entities system))
+        (results))
     (when (>= (length entities) grouping)
-      (if (= grouping 1)
-          (dolist (e entities)
-            (%do-entities system e))
-          (map-combinations
-           (lambda (x) (apply #'%do-entities system x))
-           entities
-           :length grouping)))))
+      (map-combinations
+       (lambda (x) (push (apply #'%do-entities system x) results))
+       entities
+       :length grouping))
+    (every #'identity results)))
 
 (defun cycle-systems ()
   "Cycle through all defined systems."
