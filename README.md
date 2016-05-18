@@ -81,18 +81,18 @@ Below is a very basic usage example:
 (defsys position ((coords) (e1 e2))
   (dolist (e (list e1 e2))
     (format t "Entity ~A at (~A, ~A, ~A)~%"
-            e (coords-x e) (coords-y e) (coords-z e)))
+            e (coords/x e) (coords/y e) (coords/z e)))
   (format t "Entity ~A is (~A, ~A, ~A) away from Entity ~A~%"
           e1
-          (- (coords-x e1) (coords-x e2))
-          (- (coords-y e1) (coords-y e2))
-          (- (coords-z e1) (coords-z e2))
+          (- (coords/x e1) (coords/x e2))
+          (- (coords/y e1) (coords/y e2))
+          (- (coords/z e1) (coords/z e2))
           e2))
 
 (defsys move ((coords velocity) (e1))
-  (incf (coords-x e1) (velocity-x e1))
-  (incf (coords-y e1) (velocity-y e1))
-  (incf (coords-z e1) (velocity-z e1)))
+  (incf (coords/x e1) (velocity/x e1))
+  (incf (coords/y e1) (velocity/y e1))
+  (incf (coords/z e1) (velocity/z e1)))
 
 ;;; Define some entities.
 

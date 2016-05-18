@@ -10,7 +10,7 @@
    (lambda (component)
      (loop :with name = (car component)
            :for (k . v) :in (plist-alist (cdr component))
-           :collect (make-keyword (format nil "~A-~A" name k)) :into slots
+           :collect (make-keyword (format nil "~A/~A" name k)) :into slots
            :collect (gensym (symbol-name k)) :into vars
            :collect v :into values
            :finally (return (list name slots (mapcar #'list vars values)))))

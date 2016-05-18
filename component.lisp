@@ -7,7 +7,7 @@
   "Define a new component with the specified fields.
 Also defines accessors for each field to be used on an entity."
   (let ((field-list (mapcar (lambda (x)
-                              (intern (format nil "~A-~A" name x)))
+                              (intern (format nil "~A/~A" name x)))
                             fields)))
     `(progn
        (setf (gethash ',name (ecs-components *ecs*))
