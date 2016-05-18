@@ -1,8 +1,7 @@
 (in-package :cl-ecs)
 
 (defstruct (component (:conc-name nil))
-  fields
-  systems)
+  fields)
 
 (defmacro defcomponent (name &body (fields))
   "Define a new component with the specified fields.
@@ -36,14 +35,6 @@ Also defines accessors for each field to be used on an entity."
 (defun add-component-field (component field)
   "Add a new field to the specified component."
   (pushnew field (component-fields component)))
-
-(defun component-systems (component)
-  "Get a list of systems the specified component is required for."
-  (systems (gethash component (ecs-components *ecs*))))
-
-(defun (setf component-systems) (value component)
-  "Assign a list of systems the specified component is required for."
-  (setf (systems (gethash component (ecs-components *ecs*))) value))
 
 (defun add-component (id component attrs)
   "Add a new component to the specified entity."

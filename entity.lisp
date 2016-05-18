@@ -73,6 +73,7 @@
   (let ((id (new-id)))
     (setf (gethash id (ecs-entities *ecs*)) (make-entity))
     (copy-prototype prototype id)
+    (cache-system-entities)
     (loop :for (name . attrs) :in components
           :do (add-component id name attrs))
     id))

@@ -7,13 +7,15 @@
 
 (defmacro defsys (name (required grouping) &body body)
   "Define a new system."
-  (let ((entities (gensym)))
+  (let ((entities (gensym))
+        (required (cond ((eq required 'all) t)
+                        ((listp required) required)
+                        (t nil))))
     `(progn
+       (cond )
        (setf (gethash ',name (ecs-systems *ecs*))
              (make-system :required ',required
                           :grouping ',grouping))
-       (loop :for component :in ',required
-             :do (pushnew ',name (component-systems component)))
        (cache-system-entities)
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
          (destructuring-bind ,grouping ,entities
@@ -43,6 +45,8 @@
         :for (id . e) :in (hash-table-alist (ecs-entities *ecs*))
         :for c = (components e)
         :when (or (not r)
+                  (and (eq r t)
+                       (not (entity-components e)))
                   (and (intersection r c)
                        (not (set-difference r c))))
           :collect id))
