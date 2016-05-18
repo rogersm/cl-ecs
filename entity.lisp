@@ -2,7 +2,8 @@
 
 (defstruct (entity (:conc-name nil))
   components
-  attributes)
+  attributes
+  tags)
 
 (defun reformat-components (components)
   "A helper function to reformat component data given to ADD-ENTITY."
@@ -42,6 +43,35 @@
 (defun (setf entity-components) (value id)
   "Assign a list of components to the specified entity."
   (setf (components (gethash id (ecs-entities *ecs*))) value))
+
+(defun entity-tags (id)
+  "Get a list of all tags for the specified entity."
+  (tags (gethash id (ecs-entities *ecs*))))
+
+(defun (setf entity-tags) (value id)
+  "Assign a list of all tags for the specified entity."
+  (setf (tags (gethash id (ecs-entities *ecs*))) value))
+
+(defun all-tags-p (id &rest tags)
+  "Check if an entity has all of the specified tags."
+  (let ((present (entity-tags id)))
+    (and (intersection tags present)
+         (not (set-difference tags present)))))
+
+(defun some-tags-p (id &rest tags)
+  "Check if an entity has some of the specified tags."
+  (let ((present (entity-tags id)))
+    (when (intersection tags present) t)))
+
+(defun add-tags (id &rest tags)
+  "Add some tags to the specified entity."
+  (symbol-macrolet ((all (entity-tags id)))
+    (map nil (lambda (x) (pushnew x all)) tags)))
+
+(defun remove-tags (id &rest tags)
+  "Remove some tags from the specified entity."
+  (symbol-macrolet ((all (entity-tags id)))
+    (map nil (lambda (x) (deletef all x)) tags)))
 
 (defun entity-attrs (id)
   "Get a list of the specified entity's attributes."
