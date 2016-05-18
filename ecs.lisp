@@ -7,8 +7,6 @@
   (components (make-hash-table))
   (systems (make-hash-table)))
 
-(setf *ecs* (make-ecs))
-
 (defun init-ecs ()
   "Initialize a new ECS system."
   (let ((id 0))
