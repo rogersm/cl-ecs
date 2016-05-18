@@ -6,18 +6,19 @@
 (defmacro defcomponent (name &body (fields))
   "Define a new component with the specified fields.
 Also defines accessors for each field to be used on an entity."
-  `(progn
-     ,(setf (gethash name (ecs-components *ecs*))
-           (make-component))
-     ,@(loop :for f :in fields
-             :for field = (intern (format nil "~A-~A" name f))
-             :for key = (make-keyword field)
-             :do (add-component-field name field)
-             :collect `(defun ,field (id)
-                         (entity-attr id ,key))
-             :collect `(defun (setf ,field) (value id)
-                         (setf (entity-attr id ,key) value)))
-     ',name))
+  (let ((field-list (mapcar (lambda (x)
+                              (intern (format nil "~A-~A" name x)))
+                            fields)))
+    `(progn
+       (setf (gethash ',name (ecs-components *ecs*))
+             (make-component :fields ',field-list))
+       ,@(loop :for field :in field-list
+               :for key = (make-keyword field)
+               :collect `(defun ,field (id)
+                           (entity-attr id ,key))
+               :collect `(defun (setf ,field) (value id)
+                           (setf (entity-attr id ,key) value)))
+       ',name)))
 
 (defun all-components ()
   "Get a list of all defined components."
