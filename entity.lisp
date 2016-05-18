@@ -63,13 +63,18 @@
   "Remove one of an entity's attributes."
   (delete-from-plistf (entity-attrs id) field))
 
+(defun copy-prototype (from to)
+  (when from
+    (setf (entity-components to) (copy-seq (entity-components from))
+          (entity-attrs to) (copy-seq (entity-attrs from)))
+    (loop :for c :in (entity-components to)
+          :do (update-systems-with-component c))))
+
 (defun %add-entity (prototype components)
   "Internal function for creating a new entity."
   (let ((id (new-id)))
     (setf (gethash id (ecs-entities *ecs*)) (make-entity))
-    (when prototype
-      (setf (entity-components id) (copy-seq (entity-components prototype))
-            (entity-attrs id) (copy-seq (entity-attrs prototype))))
+    (copy-prototype prototype id)
     (loop :for (name . attrs) :in components
           :do (add-component id name attrs))
     id))
@@ -77,4 +82,4 @@
 (defun remove-entity (id)
   "Remove an entity."
   (remhash id (ecs-entities *ecs*))
-  (update-systems))
+  (update-all-systems))

@@ -1,7 +1,8 @@
 (in-package :cl-ecs)
 
 (defstruct (component (:conc-name nil))
-  fields)
+  fields
+  systems)
 
 (defmacro defcomponent (name &body (fields))
   "Define a new component with the specified fields.
@@ -36,11 +37,19 @@ Also defines accessors for each field to be used on an entity."
   "Add a new field to the specified component."
   (pushnew field (component-fields component)))
 
+(defun component-systems (component)
+  "Get a list of systems the specified component is required for."
+  (systems (gethash component (ecs-components *ecs*))))
+
+(defun (setf component-systems) (value component)
+  "Assign a list of systems the specified component is required for."
+  (setf (systems (gethash component (ecs-components *ecs*))) value))
+
 (defun add-component (id component attrs)
   "Add a new component to the specified entity."
   (when (member component (all-components))
     (pushnew component (entity-components id)))
-  (update-systems)
+  (update-systems-with-component component)
   (loop :for (field . value) :in (plist-alist attrs)
         :for fields = (mapcar #'make-keyword (component-fields component))
         :when (member field fields)
@@ -49,7 +58,7 @@ Also defines accessors for each field to be used on an entity."
 (defun remove-component (id component)
   "Remove a component from the specified entity."
   (deletef (entity-components id) component)
-  (update-systems)
+  (update-systems-with-component component)
   (loop :for field :in (component-fields component)
         :when (entity-attr id field)
           :do (remove-entity-attr id field)))

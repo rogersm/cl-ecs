@@ -12,6 +12,9 @@
        (setf (gethash ',name (ecs-systems *ecs*))
              (make-system :required ',required
                           :grouping ',grouping))
+       (loop :for component :in ',required
+             :do (pushnew ',name (component-systems component)))
+       (update-system ',name)
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
          (destructuring-bind ,grouping ,entities
            ,@body)))))
@@ -51,12 +54,20 @@
   "Assign a list of entities to the specified system."
   (setf (entities (gethash system (ecs-systems *ecs*))) value))
 
-(defun update-systems ()
-  "Update the the list of entities each system processes.
-Called when a component is added or removed, as well as when an entity is
-removed."
+(defun update-system (system)
+  "Update the list of entities for the specified system."
+  (setf (system-entities system) (collect-system-entities system)))
+
+(defun update-systems-with-component (component)
+  "Update the list of entities for all systems with the specified required
+component"
+  (loop :for system :in (component-systems component)
+        :do (update-system system)))
+
+(defun update-all-systems ()
+  "Update the the list of entities for all systems."
   (loop :for system :in (all-systems)
-        :do (setf (system-entities system) (collect-system-entities system))))
+        :do (update-system system)))
 
 (defmethod do-system (system)
   "Execute the specified system. The system definition's grouping determines
