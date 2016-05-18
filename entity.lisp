@@ -66,9 +66,7 @@
 (defun copy-prototype (from to)
   (when from
     (setf (entity-components to) (copy-seq (entity-components from))
-          (entity-attrs to) (copy-seq (entity-attrs from)))
-    (loop :for c :in (entity-components to)
-          :do (update-systems-with-component c))))
+          (entity-attrs to) (copy-seq (entity-attrs from)))))
 
 (defun %add-entity (prototype components)
   "Internal function for creating a new entity."
@@ -82,4 +80,4 @@
 (defun remove-entity (id)
   "Remove an entity."
   (remhash id (ecs-entities *ecs*))
-  (update-all-systems))
+  (cache-system-entities))

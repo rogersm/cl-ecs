@@ -49,7 +49,7 @@ Also defines accessors for each field to be used on an entity."
   "Add a new component to the specified entity."
   (when (member component (all-components))
     (pushnew component (entity-components id)))
-  (update-systems-with-component component)
+  (cache-system-entities)
   (loop :for (field . value) :in (plist-alist attrs)
         :for fields = (mapcar #'make-keyword (component-fields component))
         :when (member field fields)
@@ -58,7 +58,7 @@ Also defines accessors for each field to be used on an entity."
 (defun remove-component (id component)
   "Remove a component from the specified entity."
   (deletef (entity-components id) component)
-  (update-systems-with-component component)
+  (cache-system-entities)
   (loop :for field :in (component-fields component)
         :when (entity-attr id field)
           :do (remove-entity-attr id field)))

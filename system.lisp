@@ -14,7 +14,7 @@
                           :grouping ',grouping))
        (loop :for component :in ',required
              :do (pushnew ',name (component-systems component)))
-       (update-system ',name)
+       (cache-system-entities)
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
          (destructuring-bind ,grouping ,entities
            ,@body)))))
@@ -42,8 +42,9 @@
   (loop :with r = (required-components system)
         :for (id . e) :in (hash-table-alist (ecs-entities *ecs*))
         :for c = (components e)
-        :when (and (intersection r c)
-                   (not (set-difference r c)))
+        :when (or (not r)
+                  (and (intersection r c)
+                       (not (set-difference r c))))
           :collect id))
 
 (defun system-entities (system)
@@ -54,20 +55,10 @@
   "Assign a list of entities to the specified system."
   (setf (entities (gethash system (ecs-systems *ecs*))) value))
 
-(defun update-system (system)
-  "Update the list of entities for the specified system."
-  (setf (system-entities system) (collect-system-entities system)))
-
-(defun update-systems-with-component (component)
-  "Update the list of entities for all systems with the specified required
-component"
-  (loop :for system :in (component-systems component)
-        :do (update-system system)))
-
-(defun update-all-systems ()
+(defun cache-system-entities ()
   "Update the the list of entities for all systems."
   (loop :for system :in (all-systems)
-        :do (update-system system)))
+        :do (setf (system-entities system) (collect-system-entities system))))
 
 (defmethod do-system (system)
   "Execute the specified system. The system definition's grouping determines
