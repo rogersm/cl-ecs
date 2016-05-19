@@ -39,7 +39,11 @@
   "Create a list of all of a system's entities."
   (loop :with r = (required-components system)
         :for (id . e) :in (hash-table-alist (ecs-entities *ecs*))
-        :when (all r (components e))
+        :for c = (components e)
+        :when (or (not r)
+                  (and (listp r) (all r c))
+                  (and (eq r :none) (not c))
+                  (and (eq r :any) c))
           :collect id))
 
 (defun system-entities (system)
@@ -60,13 +64,14 @@
 parallel processing of entities."
   (let ((grouping (length (system-grouping system)))
         (entities (system-entities system))
-        (results))
+        (result t))
     (when (>= (length entities) grouping)
       (map-combinations
-       (lambda (x) (push (apply #'%do-entities system x) results))
+       (lambda (x) (unless (apply #'%do-entities system x)
+                (setf result t)))
        entities
-       :length grouping))
-    (every #'identity results)))
+       :length grouping)
+      result)))
 
 (defun cycle-systems ()
   "Cycle through all defined systems."
