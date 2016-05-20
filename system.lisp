@@ -14,8 +14,9 @@
                           :grouping ',grouping))
        (cache-system-entities)
        (defmethod %do-entities ((system (eql ',name)) &rest ,entities)
-         (destructuring-bind ,grouping ,entities
-           ,@body)))))
+         (block ,name
+           (destructuring-bind ,grouping ,entities
+             ,@body))))))
 
 (defgeneric %do-entities (system &rest entities))
 
@@ -64,13 +65,13 @@
 parallel processing of entities."
   (let ((grouping (length (system-grouping system)))
         (entities (system-entities system))
-        (result t))
+        (result))
     (when (>= (length entities) grouping)
-      (map-combinations
-       (lambda (x) (unless (apply #'%do-entities system x)
-                (setf result t)))
-       entities
-       :length grouping)
+      (if (= (length entities) 1)
+          (setf result (apply #'%do-entities system entities))
+          (map-combinations
+           (lambda (x) (setf result (apply #'%do-entities system x)))
+           entities :length grouping))
       result)))
 
 (defun cycle-systems ()
