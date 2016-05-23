@@ -32,10 +32,6 @@ Also defines accessors for each field to be used on an entity."
   "Assign a list of fields to the specified component."
   (setf (fields (gethash component (ecs-components *ecs*))) value))
 
-(defun add-component-field (component field)
-  "Add a new field to the specified component."
-  (pushnew field (component-fields component)))
-
 (defun add-component (id component attrs)
   "Add a new component to the specified entity."
   (when (member component (all-components))
@@ -50,6 +46,6 @@ Also defines accessors for each field to be used on an entity."
   "Remove a component from the specified entity."
   (deletef (entity-components id) component)
   (cache-system-entities)
-  (loop :for field :in (component-fields component)
+  (loop :for field :in (mapcar #'make-keyword (component-fields component))
         :when (entity-attr id field)
           :do (remove-entity-attr id field)))
